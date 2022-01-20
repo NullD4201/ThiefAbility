@@ -84,11 +84,12 @@ public class Vote implements Listener {
             if (total_voteCount >= playerList.size()) {
                 List<Map.Entry<UUID, Integer>> entryList = new ArrayList<>(vote_count_map.entrySet());
                 entryList.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
-                Bukkit.getConsoleSender().sendMessage(entryList.toString());
 
-                int first = entryList.get(0).getValue();
-                for (Map.Entry<UUID, Integer> entry : entryList) {
-                    if (entry.getValue() >= first) resultList.add(Objects.requireNonNull(Bukkit.getPlayer(entry.getKey())).getDisplayName());
+                if (entryList.size() > 0) {
+                    int first = entryList.get(0).getValue();
+                    for (Map.Entry<UUID, Integer> entry : entryList) {
+                        if (entry.getValue() >= first) resultList.add(Objects.requireNonNull(Bukkit.getPlayer(entry.getKey())).getDisplayName());
+                    }
                 }
 
                 new BukkitRunnable(){
