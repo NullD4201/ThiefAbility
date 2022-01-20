@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -26,7 +27,7 @@ public class Vote implements Listener {
     public static List<Player> voteList = new ArrayList<>();
     public static int total_voteCount = 0; // 전체 플레이어의 투표 수
 
-    public static Map<Player, Integer> vote_availableCount_map = new HashMap<>(); // 각 플레이어별 남은 투표 가능횟수
+    public static Map<UUID, Integer> vote_availableCount_map = new HashMap<>(); // 각 플레이어별 남은 투표 가능횟수
     @EventHandler
     public void openVote(GameStateChangeEvent event) {
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -42,13 +43,14 @@ public class Vote implements Listener {
                 if (JobAPI.getJob(player).equals(Jobs.JUDGE)) {
                     availableCount_default = 3;
                 } else availableCount_default = 1;
-                vote_availableCount_map.put(player, availableCount_default);
+                vote_availableCount_map.put(player.getUniqueId(), availableCount_default);
                 player.openInventory(GUI.voteGui(voteList));
+                Bukkit.getConsoleSender().sendMessage(player.getName());
             }
         }
     }
 
-    public static Map<Player, Integer> vote_count_map = new HashMap<>();
+    public static Map<UUID, Integer> vote_count_map = new HashMap<>();
     public static List<String> resultList = new ArrayList<>(); // 투표 결과 최상위 득표자 리스트
     @EventHandler
     public void onVoteClick(InventoryClickEvent event) {
@@ -57,13 +59,13 @@ public class Vote implements Listener {
             int slot = event.getSlot();
 
             if (event.getClickedInventory() != null && !event.getClickedInventory().equals(event.getWhoClicked().getInventory())) {
-                Inventory inventory = event.getClickedInventory();
+                InventoryView inventory = event.getView();
                 int where_are_you = GUI.playerHeadPos.get(voteList.indexOf((Player) event.getWhoClicked()));
 
                 if (toVote != null && toVote.getType().equals(Material.PLAYER_HEAD) && inventory.getItem(where_are_you-1) != null && !inventory.getItem(where_are_you-1).getType().equals(Material.BARRIER) && !inventory.getItem(where_are_you-1).getType().equals(Material.LIME_DYE)) {
-                    if (vote_availableCount_map.get((Player) event.getWhoClicked()) <= 0) return;
+                    if (vote_availableCount_map.get(event.getWhoClicked().getUniqueId()) <= 0) return;
 
-                    if (vote_availableCount_map.get((Player) event.getWhoClicked()) == 1) {
+                    if (vote_availableCount_map.get(event.getWhoClicked().getUniqueId()) == 1) {
                         inventory.setItem(where_are_you - 1, new ItemStack(Material.LIME_DYE, 1));
                         total_voteCount += 1;
                     }
@@ -75,16 +77,18 @@ public class Vote implements Listener {
                         inventory.setItem(slot+9, current);
                     }
 
-                    vote_availableCount_map.put((Player) event.getWhoClicked(), vote_availableCount_map.get((Player) event.getWhoClicked())-1);
+                    vote_availableCount_map.put(event.getWhoClicked().getUniqueId(), vote_availableCount_map.get(event.getWhoClicked().getUniqueId())-1);
                 }
             }
 
             if (total_voteCount >= playerList.size()) {
-                List<Map.Entry<Player, Integer>> entryList = new ArrayList<>(vote_count_map.entrySet());
+                List<Map.Entry<UUID, Integer>> entryList = new ArrayList<>(vote_count_map.entrySet());
                 entryList.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
+                Bukkit.getConsoleSender().sendMessage(entryList.toString());
+
                 int first = entryList.get(0).getValue();
-                for (Map.Entry<Player, Integer> entry : entryList) {
-                    if (entry.getValue() >= first) resultList.add(entry.getKey().getDisplayName());
+                for (Map.Entry<UUID, Integer> entry : entryList) {
+                    if (entry.getValue() >= first) resultList.add(Objects.requireNonNull(Bukkit.getPlayer(entry.getKey())).getDisplayName());
                 }
 
                 new BukkitRunnable(){
@@ -98,6 +102,8 @@ public class Vote implements Listener {
                     }
                 }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 60);
             }
+
+            event.setCancelled(true);
         }
     }
 
@@ -108,6 +114,12 @@ public class Vote implements Listener {
                 @Override
                 public void run(){
                     if (GameState.getNowState().equals(GameState.VOTING)) event.getPlayer().openInventory(event.getView());
+                    else {
+                        for (Player player : playerList) player.closeInventory();
+                    }
+
+                    voteList = new ArrayList<>();
+                    playerList = new ArrayList<>();
                 }
             }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 10);
         }

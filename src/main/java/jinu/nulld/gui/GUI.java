@@ -87,6 +87,8 @@ public class GUI {
         SkullMeta headMeta = (SkullMeta) head.getItemMeta();
 
         for (int i = 0; i < 8; i++) {
+            if (playerList.size() <= i) break;
+
             if (playerList.get(i).getGameMode().equals(GameMode.SURVIVAL) || playerList.get(i).getGameMode().equals(GameMode.ADVENTURE)) {
                 color = "§a";
                 inventory.setItem(playerHeadPos.get(i)-1, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1));

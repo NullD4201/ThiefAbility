@@ -2,6 +2,7 @@ package jinu.nulld;
 
 import jinu.nulld.ability.AbilityStartUseEvent;
 import jinu.nulld.flow.GameState;
+import jinu.nulld.flow.GameStateChangeEvent;
 import jinu.nulld.gui.GUI;
 import jinu.nulld.jobs.Jobs;
 import org.bukkit.Bukkit;
@@ -13,6 +14,7 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +28,10 @@ public class ABCommand implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         Player player = (Player) sender;
         if (label.equalsIgnoreCase("능력")) {
+            if (args[0].equalsIgnoreCase("debug")) {
+                GameStateChangeEvent event = new GameStateChangeEvent(GameState.WAITING, GameState.VOTING);
+                Bukkit.getPluginManager().callEvent(event);
+            }
             if (args[0].equalsIgnoreCase("확인")) {
                 if (jobMap.get(player.getUniqueId()) != null) {
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&b&l직업 : &e&l"+jobMap.get(player.getUniqueId()).getJobName()));
