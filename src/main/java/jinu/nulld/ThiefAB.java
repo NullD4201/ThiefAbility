@@ -2,6 +2,7 @@ package jinu.nulld;
 
 import jinu.nulld.chat.ChatSend;
 import jinu.nulld.gui.GUIEvent;
+import jinu.nulld.vote.Vote;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,6 +30,7 @@ public final class ThiefAB extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new ChatSend(), this);
         getServer().getPluginManager().registerEvents(new GUIEvent(), this);
+        getServer().getPluginManager().registerEvents(new Vote(), this);
     }
 
     @Override
