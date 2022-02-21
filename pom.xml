@@ -6,7 +6,7 @@
 
     <groupId>jinu</groupId>
     <artifactId>nulld</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
     <packaging>jar</packaging>
 
     <name>ThiefAbility</name>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>com.github.NullD4201</groupId>
             <artifactId>ThiefGame</artifactId>
-            <version>LATEST</version>
+            <version>2.2.5</version>
         </dependency>
         <dependency>
             <groupId>net.raidstone</groupId>

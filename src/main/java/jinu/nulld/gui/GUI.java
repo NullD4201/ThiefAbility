@@ -1,6 +1,7 @@
 package jinu.nulld.gui;
 
 import com.sun.istack.internal.Nullable;
+import jinu.nulld.bar.InstructionBar;
 import jinu.nulld.jobs.IsThief;
 import jinu.nulld.jobs.JobAPI;
 import jinu.nulld.jobs.Jobs;
@@ -80,8 +81,8 @@ public class GUI {
     }
 
     public static List<Integer> playerHeadPos = Arrays.asList(10, 12, 14, 16, 28, 30, 32, 34);
-    public static Inventory voteGui(List<Player> playerList) {
-        Inventory inventory = Bukkit.createInventory(null, 54, "피고인 투표");
+    public static Inventory voteGui(List<UUID> playerList) {
+        Inventory inventory = Bukkit.createInventory(null, 54, InstructionBar.unicodeString_byKey("voteTitle"));
         String color;
         ItemStack head = new ItemStack(Material.PLAYER_HEAD, 1);
         SkullMeta headMeta = (SkullMeta) head.getItemMeta();
@@ -89,16 +90,19 @@ public class GUI {
         for (int i = 0; i < 8; i++) {
             if (playerList.size() <= i) break;
 
-            if (playerList.get(i).getGameMode().equals(GameMode.SURVIVAL) || playerList.get(i).getGameMode().equals(GameMode.ADVENTURE)) {
+            if (Bukkit.getPlayer(playerList.get(i)).getGameMode().equals(GameMode.SURVIVAL) || Bukkit.getPlayer(playerList.get(i)).getGameMode().equals(GameMode.ADVENTURE)) {
                 color = "§a";
-                inventory.setItem(playerHeadPos.get(i)-1, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1));
             }
             else {
                 color = "§c";
-                inventory.setItem(playerHeadPos.get(i)-1, new ItemStack(Material.BARRIER, 1));
             }
-            headMeta.setDisplayName(color + playerList.get(i).getDisplayName());
-            headMeta.setOwningPlayer(playerList.get(i));
+            Objects.requireNonNull(headMeta).setDisplayName(color + Bukkit.getPlayer(playerList.get(i)).getDisplayName());
+            if (color.equalsIgnoreCase("§a")) {
+                List<String> lore = new ArrayList<>();
+                lore.add("§f- 직업 : §6" + JobAPI.getJob(playerList.get(i)).getJobName());
+                headMeta.setLore(lore);
+            }
+            headMeta.setOwningPlayer(Bukkit.getPlayer(playerList.get(i)));
             head.setItemMeta(headMeta);
 
             inventory.setItem(playerHeadPos.get(i), head);

@@ -1,36 +1,90 @@
 package jinu.nulld;
 
 import jinu.nulld.ability.AbilityStartUseEvent;
+import jinu.nulld.bar.ResultBar;
 import jinu.nulld.flow.GameState;
 import jinu.nulld.flow.GameStateChangeEvent;
 import jinu.nulld.gui.GUI;
 import jinu.nulld.jobs.Jobs;
+import jinu.nulld.vote.VoteResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.io.File;
+import java.util.*;
 
 public class ABCommand implements TabExecutor {
     public static Map<UUID, Jobs> jobMap = Jobs.jobMap;
 
+    public static boolean isNumeric(String string) {
+        if (string == null) return false;
+        try {
+            double d = Double.parseDouble(string);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static Map<String, UUID> face_to_playerUUID = new HashMap<>();
+    public static String playerUUID_to_face(UUID uuid) {
+        String toReturn = null;
+        for (String string : face_to_playerUUID.keySet()) {
+            if (face_to_playerUUID.get(string).equals(uuid)) {
+                toReturn = string;
+                break;
+            }
+        }
+        return toReturn;
+    }
+    public static String playerUUID_to_face(String uuidString) {
+        UUID uuid = UUID.fromString(uuidString);
+        return playerUUID_to_face(uuid);
+    }
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         Player player = (Player) sender;
+        if (label.equalsIgnoreCase("공지") && player.isOp()) {
+            StringBuilder string = new StringBuilder();
+            for (String s : args) string.append(" ").append(s);
+
+            for (Player p : Bukkit.getOnlinePlayers()) p.sendMessage("§7[§b괴도찾기§7]§d" + string);
+        }
+        if (label.equalsIgnoreCase("thab") && player.isOp()) {
+            if (args[0].equalsIgnoreCase("setbar")) {
+                ThiefAB.bartitle = YamlConfiguration.loadConfiguration(new File(ThiefAB.getPlugin(ThiefAB.class).getDataFolder(), "bartitle.yml"));
+            } else if (args[0].equalsIgnoreCase("setface") && args.length == 3) {
+                String playerName = args[1];
+                String num = args[2];
+                if (!isNumeric(num)) return false;
+
+                Player toSet = Bukkit.getPlayer(playerName);
+                if (toSet == null) return false;
+
+                int number = Integer.parseInt(num);
+                if (number < 1 || number > 8) return false;
+                String face = "face"+num;
+
+                face_to_playerUUID.put(face, toSet.getUniqueId());
+                player.sendMessage("Set player "+toSet.getName()+" to "+face);
+            } else if (args[0].equalsIgnoreCase("showbar")) {
+                ResultBar.register();
+                VoteResult.barShow(true);
+            } else if (args[0].equalsIgnoreCase("rmbar")) {
+                VoteResult.barShow(false);
+            }
+        }
         if (label.equalsIgnoreCase("능력")) {
             if (args[0].equalsIgnoreCase("debug")) {
-                GameStateChangeEvent event = new GameStateChangeEvent(GameState.WAITING, GameState.VOTING);
-                Bukkit.getPluginManager().callEvent(event);
+                GameState.setGameState(GameState.VOTING);
             }
             if (args[0].equalsIgnoreCase("확인")) {
                 if (jobMap.get(player.getUniqueId()) != null) {

@@ -1,9 +1,11 @@
 package jinu.nulld.vote;
 
+import jinu.nulld.ABCommand;
 import jinu.nulld.ThiefAB;
+import jinu.nulld.bar.InstructionBar;
+import jinu.nulld.flow.EventOfVoteResult;
 import jinu.nulld.flow.GameState;
 import jinu.nulld.flow.GameStateChangeEvent;
-import jinu.nulld.flow.VoteEndEvent;
 import jinu.nulld.gui.GUI;
 import jinu.nulld.jobs.JobAPI;
 import jinu.nulld.jobs.Jobs;
@@ -14,115 +16,123 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
 public class Vote implements Listener {
-    public static List<Player> playerList = new ArrayList<>();
-    public static List<Player> voteList = new ArrayList<>();
-    public static int total_voteCount = 0; // 전체 플레이어의 투표 수
-
-    public static Map<UUID, Integer> vote_availableCount_map = new HashMap<>(); // 각 플레이어별 남은 투표 가능횟수
+    public static Map<UUID, Boolean> isVoteEnded_forPlayer;
+    private static BukkitTask waitTitle;
     @EventHandler
-    public void openVote(GameStateChangeEvent event) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!JobAPI.getJob(player).equals(Jobs.NONE) && !player.getGameMode().equals(GameMode.SPECTATOR) && !player.getGameMode().equals(GameMode.CREATIVE)) playerList.add(player);
-        }
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!JobAPI.getJob(player).equals(Jobs.NONE)) voteList.add(player);
-        }
+    public void onStateChange(GameStateChangeEvent event) {
+        if (event.getNewState().equals(GameState.VOTING)) {
+            isVoteEnded_forPlayer = new HashMap<>();
 
-        int availableCount_default;
-        if (event.getNewState() != null && event.getNewState().equals(GameState.VOTING)) {
-            for (Player player : playerList) {
-                if (JobAPI.getJob(player).equals(Jobs.JUDGE)) {
-                    availableCount_default = 3;
-                } else availableCount_default = 1;
-                vote_availableCount_map.put(player.getUniqueId(), availableCount_default);
-                player.openInventory(GUI.voteGui(voteList));
-                Bukkit.getConsoleSender().sendMessage(player.getName());
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (!JobAPI.getJob(player).equals(Jobs.NONE) && !player.getGameMode().equals(GameMode.SPECTATOR) && !player.getGameMode().equals(GameMode.CREATIVE)) playerList.add(player.getUniqueId());
             }
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (!JobAPI.getJob(player).equals(Jobs.NONE)) voteList.add(player.getUniqueId());
+            }
+            for (UUID uuid : playerList) {
+                Bukkit.getPlayer(uuid).openInventory(GUI.voteGui(voteList));
+            }
+
+            waitTitle = new BukkitRunnable(){
+                @Override
+                public void run(){
+                    for (UUID uuid : isVoteEnded_forPlayer.keySet()) {
+                        if (isVoteEnded_forPlayer.getOrDefault(uuid, false)) {
+                            if (GameState.getNowState().equals(GameState.VOTING)) Bukkit.getPlayer(uuid).sendTitle("§a투표 진행중...", "§f다른 사람들의 투표가 끝날 때까지 기다려 주세요.", 20, 40, 20);
+                            else cancel();
+                        }
+                    }
+                }
+            }.runTaskTimer(ThiefAB.getPlugin(ThiefAB.class), 0, 80);
         }
     }
+    public static List<UUID> playerList = new ArrayList<>(); // 투표창이 열릴 플레이어
+    public static List<UUID> voteList = new ArrayList<>(); // 투표 목록에 해당하는 플레이어
 
-    public static Map<UUID, Integer> vote_count_map = new HashMap<>();
-    public static List<String> resultList = new ArrayList<>(); // 투표 결과 최상위 득표자 리스트
+    public static Map<UUID, Integer> vote_availableCount_map = new HashMap<>(); // 각 플레이어별 남은 투표 가능횟수
+
+    public static Map<String, Integer> after_vote = new HashMap<>(); // 각 사람이 투표한 이후에 대상의 투표수
+    public static int total_voteCount = 0; // 전체 투표수
+
     @EventHandler
     public void onVoteClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().equalsIgnoreCase("피고인 투표")) {
-            ItemStack toVote = event.getCurrentItem();
-            int slot = event.getSlot();
+        if (event.getView().getTitle().equalsIgnoreCase(InstructionBar.unicodeString_byKey("voteTitle"))) {
 
-            if (event.getClickedInventory() != null && !event.getClickedInventory().equals(event.getWhoClicked().getInventory())) {
-                InventoryView inventory = event.getView();
-                int where_are_you = GUI.playerHeadPos.get(voteList.indexOf((Player) event.getWhoClicked()));
+            event.setCancelled(true);
+            Player player = (Player) event.getWhoClicked();
+            Player target = null;
+            int clickedSlot = event.getSlot();
 
-                if (toVote != null && toVote.getType().equals(Material.PLAYER_HEAD) && inventory.getItem(where_are_you-1) != null && !inventory.getItem(where_are_you-1).getType().equals(Material.BARRIER) && !inventory.getItem(where_are_you-1).getType().equals(Material.LIME_DYE)) {
-                    if (vote_availableCount_map.get(event.getWhoClicked().getUniqueId()) <= 0) return;
+            if (event.getClickedInventory() == null) return;
 
-                    if (vote_availableCount_map.get(event.getWhoClicked().getUniqueId()) == 1) {
-                        inventory.setItem(where_are_you - 1, new ItemStack(Material.LIME_DYE, 1));
-                        total_voteCount += 1;
-                    }
+            if (event.getClickedInventory().equals(player.getInventory())) return;
 
-                    if (inventory.getItem(slot+9) == null || !inventory.getItem(slot+9).getType().equals(Material.PAPER)) inventory.setItem(slot+9, new ItemStack(Material.PAPER, 1));
-                    else {
-                        ItemStack current = inventory.getItem(slot+9);
-                        current.setAmount(current.getAmount()+1);
-                        inventory.setItem(slot+9, current);
-                    }
-
-                    vote_availableCount_map.put(event.getWhoClicked().getUniqueId(), vote_availableCount_map.get(event.getWhoClicked().getUniqueId())-1);
-                }
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType().equals(Material.PLAYER_HEAD)) {
+                ItemStack _current = event.getCurrentItem();
+                SkullMeta _current_meta = (SkullMeta) _current.getItemMeta();
+                target = _current_meta.getOwningPlayer().getPlayer();
             }
 
-            if (total_voteCount >= playerList.size()) {
-                List<Map.Entry<UUID, Integer>> entryList = new ArrayList<>(vote_count_map.entrySet());
-                entryList.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
+            int target_restVote = vote_availableCount_map.getOrDefault(player.getUniqueId(), 1); // map에서 불러온 남은 투표수
+            if (target_restVote == 0) {
+                player.sendMessage("§c이미 투표를 완료했습니다.");
+                return;
+            }
 
-                if (entryList.size() > 0) {
-                    int first = entryList.get(0).getValue();
-                    for (Map.Entry<UUID, Integer> entry : entryList) {
-                        if (entry.getValue() >= first) resultList.add(Objects.requireNonNull(Bukkit.getPlayer(entry.getKey())).getDisplayName());
-                    }
+            String object;
+            if (clickedSlot == 48 || clickedSlot == 49 || clickedSlot == 50) {
+                player.sendMessage("이번 투표를 건너뜁니다.");
+                object = "skip";
+            } else if (GUI.playerHeadPos.contains(clickedSlot)) {
+                if (target == null) return;
+                else {
+                    player.sendMessage(target.getDisplayName() + "(을)를 선택하셨습니다.");
+                    object = ABCommand.playerUUID_to_face(target.getUniqueId());
+                }
+            } else return;
+
+            int _value = after_vote.getOrDefault(object, 0);
+            if (JobAPI.getJob(player).equals(Jobs.JUDGE)) {
+                after_vote.put(object, _value+3);
+                vote_availableCount_map.put(player.getUniqueId(), 0);
+                total_voteCount += 3;
+            } else {
+                after_vote.put(object, _value+1);
+                vote_availableCount_map.put(player.getUniqueId(), 0);
+                total_voteCount += 1;
+            }
+
+            if (object != null) {
+                isVoteEnded_forPlayer.put(player.getUniqueId(), true);
+
+                if (!isVoteEnded_forPlayer.values().contains(false) && isVoteEnded_forPlayer.keySet().size() == playerList.size()) {
+                    waitTitle.cancel();
+                    new BukkitRunnable(){
+                        @Override
+                        public void run(){
+                            Bukkit.getPluginManager().callEvent(new EventOfVoteResult(after_vote));
+                        }
+                    }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 60);
                 }
 
+                player.closeInventory();
+            } else {
+                player.sendTitle("", "§c아직 투표를 완료하지 않았습니다.", 5, 30, 5);
                 new BukkitRunnable(){
                     @Override
                     public void run(){
-                        for (Player player : playerList) player.closeInventory();
-                        VoteEndEvent endEvent = new VoteEndEvent();
-                        endEvent.setResult(resultList);
-                        Bukkit.getPluginManager().callEvent(endEvent);
-                        GameState.setGameState(GameState.WAITING);
+                        player.openInventory(event.getView());
                     }
-                }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 60);
+                }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 40);
             }
-
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onVoteClose(InventoryCloseEvent event) {
-        if (event.getView().getTitle().equalsIgnoreCase("피고인 투표")) {
-            new BukkitRunnable(){
-                @Override
-                public void run(){
-                    if (GameState.getNowState().equals(GameState.VOTING)) event.getPlayer().openInventory(event.getView());
-                    else {
-                        for (Player player : playerList) player.closeInventory();
-                    }
-
-                    voteList = new ArrayList<>();
-                    playerList = new ArrayList<>();
-                }
-            }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 10);
         }
     }
 }

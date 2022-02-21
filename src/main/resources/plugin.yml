@@ -1,7 +1,7 @@
 name: ThiefAbility
 version: '${project.version}'
 main: jinu.nulld.ThiefAB
-prefix: §&aTHAB
+prefix: §aTHAB
 depend: [ ThiefGame, WorldGuardEvents ]
 api-version: 1.16
 
@@ -12,3 +12,5 @@ commands:
     description: 채팅채널에 join/leave 합니다.
   메모:
     description: 메모장을 지급합니다.
+  공지:
+  thab:
