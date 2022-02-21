@@ -34,7 +34,8 @@ public class VoteHandler implements HttpHandler {
             List<String> joArr = new ArrayList<>();
             for (UUID uuid : jobMap.keySet()) {
                 joArr.add("{\"displayName\":\""+Bukkit.getPlayer(uuid).getDisplayName()+"\","
-                        + "\"faceID\":\""+ABCommand.playerUUID_to_face(uuid)+"\""
+                        + "\"faceID\":\""+ABCommand.playerUUID_to_face(uuid)+"\","
+                        + "\"job\":\""+jobMap.get(uuid).getJobName()+"\""
                         + (result ? ",\"voteResult\":"+after_vote.getOrDefault(ABCommand.playerUUID_to_face(uuid), 0).toString() : "")
                         + "}");
             }
