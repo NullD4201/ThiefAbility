@@ -52,7 +52,7 @@ public class VoteHandler implements HttpHandler {
             // Set Response Headers
             Headers headers = exchange.getResponseHeaders();
             headers.add("Access-Control-Cross-Origin", "*");
-            headers.add("Content-Type", "text/plain;charset=UTF-8");
+            headers.add("Content-Type", "application/json;charset=UTF-8");
 //            headers.add("Content-Length", String.valueOf(contentLength));
 
             // Send Response Headers
