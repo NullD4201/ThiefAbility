@@ -63,6 +63,8 @@ public final class ThiefAB extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        httpServerManager.stop(0);
+        httpServerManager = null;
     }
 
     public static Map<UUID, Boolean> isVoteEnded_forPlayer = new HashMap<>();
