@@ -10,8 +10,11 @@ import org.bukkit.Bukkit;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static jinu.nulld.vote.Vote.playerList;
 
 public class VoteHandler implements HttpHandler {
     @Override
@@ -35,8 +38,9 @@ public class VoteHandler implements HttpHandler {
             for (UUID uuid : jobMap.keySet()) {
                 joArr.add("{\"displayName\":\""+Bukkit.getPlayer(uuid).getDisplayName()+"\","
                         + "\"faceID\":\""+ABCommand.playerUUID_to_face(uuid)+"\","
-                        + "\"job\":\""+jobMap.get(uuid).getJobName()+"\""
-                        + (result ? ",\"voteResult\":"+after_vote.getOrDefault(ABCommand.playerUUID_to_face(uuid), 0).toString() : "")
+                        + "\"job\":\""+jobMap.get(uuid).getJobName()+"\","
+                        + "\"isValid\":"+playerList.contains(uuid)+""
+                        + (result ? ",\"voteResult\":"+after_vote.getOrDefault(uuid.toString(), 0).toString() : "")
                         + "}");
             }
             content = "{\"users\":"+joArr+""
@@ -44,10 +48,10 @@ public class VoteHandler implements HttpHandler {
                     + "}";
 
             // Encoding to UTF-8
-//            ByteBuffer bb = StandardCharsets.UTF_8.encode(jo.toString());
-//            int contentLength = bb.limit();
-//            byte[] content = new byte[contentLength];
-//            bb.get(content, 0, contentLength);
+            ByteBuffer bb = StandardCharsets.UTF_8.encode(content);
+            int contentLength = bb.limit();
+            byte[] contentL = new byte[contentLength];
+            bb.get(contentL, 0, contentLength);
 
             // Set Response Headers
             Headers headers = exchange.getResponseHeaders();

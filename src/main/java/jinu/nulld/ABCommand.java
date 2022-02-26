@@ -1,12 +1,9 @@
 package jinu.nulld;
 
 import jinu.nulld.ability.AbilityStartUseEvent;
-import jinu.nulld.bar.ResultBar;
 import jinu.nulld.flow.GameState;
-import jinu.nulld.flow.GameStateChangeEvent;
 import jinu.nulld.gui.GUI;
 import jinu.nulld.jobs.Jobs;
-import jinu.nulld.vote.VoteResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -75,11 +72,6 @@ public class ABCommand implements TabExecutor {
 
                 face_to_playerUUID.put(face, toSet.getUniqueId());
                 player.sendMessage("Set player "+toSet.getName()+" to "+face);
-            } else if (args[0].equalsIgnoreCase("showbar")) {
-                ResultBar.register();
-                VoteResult.barShow(true);
-            } else if (args[0].equalsIgnoreCase("rmbar")) {
-                VoteResult.barShow(false);
             }
         }
         if (label.equalsIgnoreCase("능력")) {

@@ -44,6 +44,7 @@ public final class ThiefAB extends JavaPlugin implements Listener {
         Objects.requireNonNull(getCommand("공지")).setExecutor(new ABCommand());
         Objects.requireNonNull(getCommand("thab")).setExecutor(new ABCommand());
         Objects.requireNonNull(getCommand("thab")).setTabCompleter(new ABCommand());
+        Objects.requireNonNull(getCommand("SENDVOTEDATAFORHTTP")).setExecutor(new Vote());
 
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new ChatSend(), this);
@@ -65,22 +66,6 @@ public final class ThiefAB extends JavaPlugin implements Listener {
         // Plugin shutdown logic
         httpServerManager.stop(0);
         httpServerManager = null;
-    }
-
-    public static Map<UUID, Boolean> isVoteEnded_forPlayer = new HashMap<>();
-    @EventHandler
-    public void onLoad(ServerLoadEvent event) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (isVoteEnded_forPlayer.getOrDefault(player.getUniqueId(), false)) {
-                new BukkitRunnable(){
-                    @Override
-                    public void run(){
-                        if (GameState.getNowState().equals(GameState.VOTING)) player.sendTitle("§a투표 진행중...", "§f다른 사람들의 투표가 끝날 때까지 기다려 주세요.", 20, 40, 20);
-                        else cancel();
-                    }
-                }.runTaskTimer(this, 0, 80);
-            }
-        }
     }
 
     public Map<UUID, ChatChannel> channelMap = new HashMap<>();
