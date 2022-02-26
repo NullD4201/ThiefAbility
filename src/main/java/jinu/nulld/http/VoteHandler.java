@@ -60,7 +60,7 @@ public class VoteHandler implements HttpHandler {
 //            headers.add("Content-Length", String.valueOf(contentLength));
 
             // Send Response Headers
-            exchange.sendResponseHeaders(200, content.length());
+            exchange.sendResponseHeaders(200, contentLength);
 
             OutputStream respBody = exchange.getResponseBody();
 
