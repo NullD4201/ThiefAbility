@@ -96,7 +96,7 @@ public class Vote implements CommandExecutor, Listener {
                         if (endVoteList.size() < playerList.size()) {
                             if (GameState.getNowState().equals(GameState.VOTING)) {
                                 for (UUID uuid : endVoteList) {
-                                    Bukkit.getPlayer(uuid).sendTitle("§a투표 진행중...", "§f다른 사람들의 투표가 끝날 때까지 기다려 주세요.", 20, 40, 20);
+                                    Bukkit.getPlayer(uuid).sendTitle("§a투표 진행중...", "§f다른 사람들의 투표가 끝날 때까지 기다려 주세요.", 20, 40, 20); // 똑똑
                                 }
                             } else cancel();
                         } else {

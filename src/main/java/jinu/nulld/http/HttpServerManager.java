@@ -34,7 +34,9 @@ public class HttpServerManager {
     private void createServer(String host, int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(host, port), DEFAULT_BACKLOG);
         server.createContext("/vote", new VoteHandler());
-
+        server.createContext("/voteresult", new VoteResultHandler());
+        server.createContext("/judge", new JudgeHandler());
+        server.createContext("/judgeresult", new JudgeHandler());
     }
 
     /**

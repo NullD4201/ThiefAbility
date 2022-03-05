@@ -59,6 +59,10 @@ public final class ThiefAB extends JavaPlugin implements Listener {
             if (bartitle.getDouble("config_version", 0.0) != 1.4) saveResource("bartitle.yml", true);
         } else saveResource("bartitle.yml", true);
         bartitle = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "bartitle.yml"));
+
+        if (!new File(getDataFolder(), "dbconfig.yml").exists()) {
+            saveResource("dbconfig.yml", true);
+        }
     }
 
     @Override

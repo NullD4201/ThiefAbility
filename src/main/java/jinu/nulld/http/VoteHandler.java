@@ -20,19 +20,9 @@ public class VoteHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            Map<String, String> queryMap = new HashMap<>();
-            if (exchange.getRequestURI().getQuery() != null) {
-                for (String string : exchange.getRequestURI().getQuery().split("&")) {
-                    queryMap.put(string.split("=")[0], string.split("=")[1]);
-                }
-            }
-
             Map<UUID, Jobs> jobMap = Jobs.jobMap;
-            Map<String, Integer> after_vote = VoteResult.voteResult;
 
             String content = "";
-
-            boolean result = queryMap.containsKey("step") && queryMap.get("step").equals("result");
 
             List<String> joArr = new ArrayList<>();
             for (UUID uuid : jobMap.keySet()) {
