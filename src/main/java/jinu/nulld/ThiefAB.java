@@ -1,14 +1,13 @@
 package jinu.nulld;
 
-import jinu.nulld.bar.InstructionBar;
-import jinu.nulld.bar.ShiftToggle;
 import jinu.nulld.chat.ChatSend;
-import jinu.nulld.flow.GameState;
-import jinu.nulld.gui.GUIEvent;
+import jinu.nulld.gui.GuiEvent;
 import jinu.nulld.http.HttpServerManager;
+import jinu.nulld.judge.Judge;
 import jinu.nulld.vote.Vote;
 import jinu.nulld.vote.VoteResult;
 import org.bukkit.Bukkit;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -16,23 +15,36 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Logger;
 
 public final class ThiefAB extends JavaPlugin implements Listener {
     public static FileConfiguration bartitle;
+    public static final Logger LOGGER = Bukkit.getLogger();
     private HttpServerManager httpServerManager = null;
+    public MySQL SQL;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
         this.httpMain();
+        this.SQL = new MySQL();
+
+        try {
+            SQL.connect();
+        } catch (ClassNotFoundException | SQLException e) {
+            LOGGER.info("Database not connected.");
+            e.printStackTrace();
+        }
+        if (SQL.isConnected()) {
+            LOGGER.info("Database connected");
+        }
 
         ChatChannel.register();
 
@@ -44,15 +56,16 @@ public final class ThiefAB extends JavaPlugin implements Listener {
         Objects.requireNonNull(getCommand("공지")).setExecutor(new ABCommand());
         Objects.requireNonNull(getCommand("thab")).setExecutor(new ABCommand());
         Objects.requireNonNull(getCommand("thab")).setTabCompleter(new ABCommand());
-        Objects.requireNonNull(getCommand("SENDVOTEDATAFORHTTP")).setExecutor(new Vote());
+        Objects.requireNonNull(getCommand("dbtest")).setExecutor(new ABCommand());
+        Objects.requireNonNull(getCommand("sendvotedataforhttp")).setExecutor(new Vote());
+        Objects.requireNonNull(getCommand("sendjudgedataforhttp")).setExecutor(new Vote());
 
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new ChatSend(), this);
-        getServer().getPluginManager().registerEvents(new GUIEvent(), this);
         getServer().getPluginManager().registerEvents(new Vote(), this);
+        getServer().getPluginManager().registerEvents(new Judge(), this);
         getServer().getPluginManager().registerEvents(new VoteResult(), this);
-        getServer().getPluginManager().registerEvents(new ShiftToggle(), this);
-        getServer().getPluginManager().registerEvents(new InstructionBar(), this);
+        getServer().getPluginManager().registerEvents(new GuiEvent(), this);
 
         if (new File(getDataFolder(), "bartitle.yml").exists()) {
             bartitle = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "bartitle.yml"));
@@ -70,6 +83,8 @@ public final class ThiefAB extends JavaPlugin implements Listener {
         // Plugin shutdown logic
         httpServerManager.stop(0);
         httpServerManager = null;
+
+        SQL.disconnect();
     }
 
     public Map<UUID, ChatChannel> channelMap = new HashMap<>();

@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
  */
 public class HttpServerManager {
     private final String DEFAULT_HOSTNAME = "0.0.0.0";
-    private final int DEFAULT_PORT = 3000;
+    private final int DEFAULT_PORT = 4546;
     private final int DEFAULT_BACKLOG = 0;
     private HttpServer server = null;
 

@@ -14,9 +14,8 @@ commands:
     description: 메모장을 지급합니다.
   공지:
   thab:
-  SENDVOTEDATAFORHTTP:
+  sendvotedataforhttp:
+  sendjudgedataforhttp:
+  dbtest:
 
-permissions:
-  vote.allow:
-    description: Allow Vote
-    default: false
+database: true

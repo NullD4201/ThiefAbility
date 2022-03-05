@@ -4,36 +4,29 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import jinu.nulld.ABCommand;
-import jinu.nulld.ThiefAB;
 import jinu.nulld.jobs.Jobs;
-import jinu.nulld.vote.VoteResult;
+import jinu.nulld.judge.Judge;
 import org.bukkit.Bukkit;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static jinu.nulld.vote.Vote.playerList;
 
-public class VoteHandler implements HttpHandler {
+public class JudgeHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            Map<UUID, Jobs> jobMap = Jobs.jobMap;
+            String content = "{\"agree\":"+ Judge.agreeInt +","
+                        + "\"disagree\":"+Judge.disagreeInt
+                        + "}";
 
-            String content = "";
-
-            List<String> joArr = new ArrayList<>();
-            for (UUID uuid : jobMap.keySet()) {
-                joArr.add("{\"displayName\":\""+Bukkit.getPlayer(uuid).getDisplayName()+"\","
-                        + "\"faceID\":\""+ABCommand.playerUUID_to_face(uuid)+"\"," // string
-                        + "\"job\":\""+jobMap.get(uuid).toString()+"\"," // string
-                        + "\"isValid\":"+playerList.contains(uuid) // boolean
-                        + "}");
-            }
-            content = "{\"users\":"+joArr+"}";
             // Encoding to UTF-8
             ByteBuffer bb = StandardCharsets.UTF_8.encode(content);
             int contentLength = bb.limit();

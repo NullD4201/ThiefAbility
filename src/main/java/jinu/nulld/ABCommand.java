@@ -5,7 +5,6 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import com.mysql.cj.xdevapi.DatabaseObject;
 import jinu.nulld.ability.AbilityStartUseEvent;
 import jinu.nulld.flow.GameState;
-import jinu.nulld.gui.GUI;
 import jinu.nulld.jobs.Jobs;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -13,6 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -21,6 +21,8 @@ import org.bukkit.inventory.meta.BookMeta;
 import java.io.File;
 import java.sql.*;
 import java.util.*;
+
+import static jinu.nulld.ThiefAB.LOGGER;
 
 public class ABCommand implements TabExecutor {
     public static Map<UUID, Jobs> jobMap = Jobs.jobMap;
@@ -50,9 +52,47 @@ public class ABCommand implements TabExecutor {
         UUID uuid = UUID.fromString(uuidString);
         return playerUUID_to_face(uuid);
     }
+    FileConfiguration config = YamlConfiguration.loadConfiguration(new File(ThiefAB.getPlugin(ThiefAB.class).getDataFolder(), "dbconfig.yml"));
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         Player player = (Player) sender;
+        if (label.equalsIgnoreCase("dbtest")) {
+//            MysqlDataSource dataSource = new MysqlConnectionPoolDataSource();
+//            dataSource.setServerName(config.getString("database.host"));
+//            dataSource.setPortNumber(config.getInt("database.port"));
+//            dataSource.setDatabaseName(config.getString("database.database"));
+//            dataSource.setUser(config.getString("database.user"));
+//            dataSource.setPassword(config.getString("database.password"));
+//
+            try {
+                MySQL db = new MySQL();
+
+                db.connect();
+
+                Statement stmt = db.getConnection().createStatement();
+                String sql = "SELECT * FROM test";
+                ResultSet result = stmt.executeQuery(sql);
+
+                while(result.next()) {
+                    int id = result.getInt(1);
+                    String name = result.getString(2);
+                    int category = result.getInt(3);
+
+                    LOGGER.info(name);
+                }
+
+                result.close();
+                stmt.close();
+                db.disconnect();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            // dbtest 명령어
+        }
         if (label.equalsIgnoreCase("공지") && player.isOp()) {
             StringBuilder string = new StringBuilder();
             for (String s : args) string.append(" ").append(s);
@@ -93,22 +133,15 @@ public class ABCommand implements TabExecutor {
                         if (jobMap.get(player.getUniqueId()).equals(Jobs.COUNSEL)) { // 검사
                             AbilityStartUseEvent event = new AbilityStartUseEvent(Jobs.COUNSEL);
                             Bukkit.getPluginManager().callEvent(event);
-                            if (!event.isCancelled()) player.openInventory(GUI.playerList(null));
-
                         } else if (jobMap.get(player.getUniqueId()).equals(Jobs.GANG)) { // 깡패
                             AbilityStartUseEvent event = new AbilityStartUseEvent(Jobs.GANG);
                             Bukkit.getPluginManager().callEvent(event);
-                            if (!event.isCancelled()) player.openInventory(GUI.playerList(player));
-
                         } else if (jobMap.get(player.getUniqueId()).equals(Jobs.AGENT)) { // 보안요원
                             AbilityStartUseEvent event = new AbilityStartUseEvent(Jobs.AGENT);
                             Bukkit.getPluginManager().callEvent(event);
-                            if (!event.isCancelled()) player.openInventory(GUI.playerList(player));
-
                         } else if (jobMap.get(player.getUniqueId()).equals(Jobs.HACKER)) { // 해커
                             AbilityStartUseEvent event = new AbilityStartUseEvent(Jobs.HACKER);
                             Bukkit.getPluginManager().callEvent(event);
-                            if (!event.isCancelled()) player.openInventory(GUI.playerList(player));
                         } else {
                             player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c명령어를 입력할 수 있는 권한이 없습니다."));
                             return false;

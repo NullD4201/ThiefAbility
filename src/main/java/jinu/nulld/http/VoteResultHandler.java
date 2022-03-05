@@ -17,23 +17,27 @@ import java.util.*;
 
 import static jinu.nulld.vote.Vote.playerList;
 
-public class VoteHandler implements HttpHandler {
+public class VoteResultHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            Map<UUID, Jobs> jobMap = Jobs.jobMap;
 
-            String content = "";
+            Map<UUID, Jobs> jobMap = Jobs.jobMap;
+            Map<String, Integer> after_vote = VoteResult.voteResult;
 
             List<String> joArr = new ArrayList<>();
             for (UUID uuid : jobMap.keySet()) {
-                joArr.add("{\"displayName\":\""+Bukkit.getPlayer(uuid).getDisplayName()+"\","
+                joArr.add("{\"displayName\":\""+Bukkit.getPlayer(uuid).getDisplayName()+"\"," // string
                         + "\"faceID\":\""+ABCommand.playerUUID_to_face(uuid)+"\"," // string
-                        + "\"job\":\""+jobMap.get(uuid).toString()+"\"," // string
+                        + "\"job\":\""+jobMap.get(uuid).getJobName()+"\"," // string
                         + "\"isValid\":"+playerList.contains(uuid) // boolean
+                        + ",\"voteResult\":\""+after_vote.getOrDefault(uuid.toString(), 0)+"\"" // integer
                         + "}");
             }
-            content = "{\"users\":"+joArr+"}";
+            String content = "{\"users\":"+joArr+""
+                    + ",\"skipVotes\":\""+after_vote.getOrDefault("skip", 0)+"\"" // integer
+                    + "}";
+
             // Encoding to UTF-8
             ByteBuffer bb = StandardCharsets.UTF_8.encode(content);
             int contentLength = bb.limit();

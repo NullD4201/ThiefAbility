@@ -1,0 +1,6 @@
+database:
+  host: skyisle.life
+  port: 3606
+  database: pixel
+  user: pixel
+  password: pixelsql22!

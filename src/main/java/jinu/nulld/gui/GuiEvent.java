@@ -20,7 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
-public class GUIEvent implements Listener {
+public class GuiEvent implements Listener {
     public static List<Player> counselSelect = new ArrayList<>();
     public static Player judgeSelect = null;
     public static Player gangSelect = null;
@@ -122,7 +122,7 @@ public class GUIEvent implements Listener {
             }
         }
     }
-//
+    //
 //    private void please_select_person(Player eventPlayer, InventoryView toReOpen) {
 //        eventPlayer.sendTitle("", "§c능력을 사용할 대상을 선택하세요", 5, 30, 5);
 //        new BukkitRunnable(){

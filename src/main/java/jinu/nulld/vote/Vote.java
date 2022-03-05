@@ -15,7 +15,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,35 +23,28 @@ import java.util.*;
 import static jinu.nulld.ABCommand.face_to_playerUUID;
 
 public class Vote implements CommandExecutor, Listener {
-    public static List<UUID> endVoteList;
+    public static List<UUID> endVoteList = new ArrayList<>();
     public static Map<String, Integer> after_vote = new HashMap<>();
     int resultCount = 0;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, String label, String[] args) {
         Player player = (Player) sender;
-        if (label.equals("SENDVOTEDATAFORHTTP")) { // /SENDVOTEDATAFORHTTP uuid/skip
+        if (label.equalsIgnoreCase("sendvotedataforhttp")) { // /SENDVOTEDATAFORHTTP uuid/skip
             if (args[0].equals("vote")) {
-                if (!perms.get(player.getUniqueId()).getPermissions().get("vote.allow")) {
-                    player.sendTitle("", "§c투표시간이 아닙니다.", 5, 30, 5);
-                    return false;
-                }
-
                 String object = "skip";
+                int currentCount_uuid_or_skip = 0;
                 if (!args[1].equals("skip")) {
                     object = args[1];
-
-                    UUID uuid = player.getUniqueId();
-                    PermissionAttachment pperms = perms.get(uuid);
-                    pperms.setPermission("vote.allow", false);
+                    currentCount_uuid_or_skip = after_vote.getOrDefault(face_to_playerUUID.get(object).toString(), 0);
                 }
 
-                int currentCount_uuid_or_skip = after_vote.getOrDefault(face_to_playerUUID.get(object).toString(), 0);
-                after_vote.put(face_to_playerUUID.get(object).toString(), currentCount_uuid_or_skip + 1);
+                if (JobAPI.getJob(player).equals(Jobs.JUDGE)) after_vote.put(face_to_playerUUID.get(object).toString(), currentCount_uuid_or_skip + 3);
+                else after_vote.put(face_to_playerUUID.get(object).toString(), currentCount_uuid_or_skip + 1);
 
                 endVoteList.add(player.getUniqueId());
             } else if (args[0].equals("result")) {
-                if (resultCount < 8) {
+                if (resultCount < playerList.size()) {
                     new BukkitRunnable(){
                         @Override
                         public void run(){
@@ -61,7 +53,7 @@ public class Vote implements CommandExecutor, Listener {
                             }
                         }
                     }.runTaskTimer(ThiefAB.getPlugin(ThiefAB.class), 0, 80);
-                } else if (resultCount == 8) {
+                } else {
                     new BukkitRunnable(){
                         @Override
                         public void run(){
@@ -69,23 +61,19 @@ public class Vote implements CommandExecutor, Listener {
                         }
                     }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 60);
                 }
+                resultCount ++;
             }
         }
         return false;
     }
 
     public static List<UUID> playerList = new ArrayList<>();
-    Map<UUID, PermissionAttachment> perms = new HashMap<>();
     @EventHandler
     public void onStateChange(GameStateChangeEvent event) {
         if (event.getNewState().equals(GameState.VOTING)) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                PermissionAttachment attachment = player.addAttachment(ThiefAB.getPlugin(ThiefAB.class));
-                perms.put(player.getUniqueId(), attachment);
                 if (!JobAPI.getJob(player).equals(Jobs.NONE) && !player.getGameMode().equals(GameMode.SPECTATOR) && !player.getGameMode().equals(GameMode.CREATIVE)) {
                     playerList.add(player.getUniqueId());
-                    PermissionAttachment pperms = perms.get(player.getUniqueId());
-                    pperms.setPermission("vote.allow", true);
                 }
             }
 
@@ -100,7 +88,6 @@ public class Vote implements CommandExecutor, Listener {
                                 }
                             } else cancel();
                         } else {
-                            Bukkit.getPluginManager().callEvent(new EventOfVoteResult(after_vote));
                             cancel();
                         }
                     }

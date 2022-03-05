@@ -77,13 +77,19 @@
         <dependency>
             <groupId>com.github.NullD4201</groupId>
             <artifactId>ThiefGame</artifactId>
-            <version>2.2.5</version>
+            <version>2.2.6</version>
         </dependency>
         <dependency>
             <groupId>net.raidstone</groupId>
             <artifactId>WorldGuardEvents</artifactId>
             <version>1.16.4</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
         </dependency>
     </dependencies>
 </project>

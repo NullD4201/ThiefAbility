@@ -6,7 +6,6 @@ import jinu.nulld.flow.EventOfVoteResult;
 import jinu.nulld.flow.ResultShowEndEvent;
 import jinu.nulld.flow.VoteEndEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -108,22 +107,6 @@ public class VoteResult implements Listener{
 //                )));
 //    }
     public static Map<String, Integer> voteResult;
-    @EventHandler
-    public void onResult(EventOfVoteResult event) {
-        Map<String, Integer> after_vote = event.getMap();
-        voteResult = after_vote;
-
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.performCommand("voteresult");
-        }
-
-        new BukkitRunnable(){
-            @Override
-            public void run(){
-                Bukkit.getPluginManager().callEvent(new ResultShowEndEvent(after_vote));
-            }
-        }.runTaskLater(ThiefAB.getPlugin(ThiefAB.class), 200);
-    }
 
     @EventHandler
     public void onShowEnd(ResultShowEndEvent event) {
@@ -158,7 +141,6 @@ public class VoteResult implements Listener{
         VoteEndEvent voteEndEvent = new VoteEndEvent();
         voteEndEvent.setResult(resultList);
         Bukkit.getPluginManager().callEvent(voteEndEvent);
-        Bukkit.getConsoleSender().sendMessage(resultList.toString());
 
         Vote.playerList = new ArrayList<>();
         Vote.endVoteList = new ArrayList<>();
