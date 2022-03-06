@@ -6,6 +6,9 @@ import com.mysql.cj.xdevapi.DatabaseObject;
 import jinu.nulld.ability.AbilityStartUseEvent;
 import jinu.nulld.flow.GameState;
 import jinu.nulld.jobs.Jobs;
+import jinu.nulld.vote.VoteDB;
+import jinu.nulld.vote.VoteData;
+import jinu.nulld.vote.VoteUser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -57,39 +60,38 @@ public class ABCommand implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         Player player = (Player) sender;
         if (label.equalsIgnoreCase("dbtest")) {
-//            MysqlDataSource dataSource = new MysqlConnectionPoolDataSource();
-//            dataSource.setServerName(config.getString("database.host"));
-//            dataSource.setPortNumber(config.getInt("database.port"));
-//            dataSource.setDatabaseName(config.getString("database.database"));
-//            dataSource.setUser(config.getString("database.user"));
-//            dataSource.setPassword(config.getString("database.password"));
-//
-            try {
-                MySQL db = new MySQL();
 
-                db.connect();
+            // 투표 생성
+            List<VoteUser> users = new ArrayList<>();
+            users.add(new VoteUser(0, 0, "틸토", "얼굴ID", "형사", true, 0));
+            VoteDB voteDB = new VoteDB();
+            VoteData myVote = voteDB.createVote(users);
 
-                Statement stmt = db.getConnection().createStatement();
-                String sql = "SELECT * FROM test";
-                ResultSet result = stmt.executeQuery(sql);
+            // 투표 리스트 불러오기
+            Map<Integer, Integer> voteList = voteDB.getVoteList();
 
-                while(result.next()) {
-                    int id = result.getInt(1);
-                    String name = result.getString(2);
-                    int category = result.getInt(3);
+            // 투표 갱신 (결과 확정)
+            voteDB.updateVote(myVote.getVoteId(), true, myVote.getSkipVotes());
 
-                    LOGGER.info(name);
-                }
+            // 투표 갱신 (스킵 투표)
+            voteDB.updateVote(myVote.getVoteId(), myVote.isResult(), myVote.getSkipVotes() + 1);
 
-                result.close();
-                stmt.close();
-                db.disconnect();
+            // 유저 분리
+            List<VoteUser> myUser = new ArrayList<>(voteDB.getVoteByID(myVote.getVoteId()).getVoteUsers().values());
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            // 유저 갱신 (투표) << 미안해요 시간 상 이게 최선이였어요
+            voteDB.updateUser(myUser.get(0).getUserId(), new VoteUser(
+                    myUser.get(0).getUserId(),
+                    myUser.get(0).getVoteId(),
+                    myUser.get(0).getDisplayName(),
+                    myUser.get(0).getFaceId(),
+                    myUser.get(0).getJob(),
+                    myUser.get(0).isValid(),
+                    myUser.get(0).getVoteResult()+1
+            ));
+
+            // 투표 파기
+            voteDB.deleteVote(myVote.getVoteId());
 
             // dbtest 명령어
         }
